@@ -42,12 +42,13 @@
     float tankLevelMin = 0;       //lowest value (%) allowed for tank level
     float distanceOffset = 1;     //compensates for reading in INCHES - not sure if this is common across all sensors
     
-    const float speedOfSound = 0.0135;  //speed of sound: inches per microsecond
+    const float speedOfSound = 0.0135;  //speed of sound: inches per MICROsecond
     float durationTimeout = (tankEmpty*1.5*2)/speedOfSound;  //used to shorten wait time for pulse 
   
   // Define variables for smoothing array:
     int readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
     int readingDelayMS = 60000;  //time gap between readings
+    int readingDelayAdjustment;  //me being WAY too anal retentive
     const int numReadings = 15;  //number of readings to be averaged/smoothed
     int readings[numReadings];   //array that stores readings
     int readIndex = 0;           
@@ -96,13 +97,15 @@ void getReading(){
 
       if (duration > 1){
         readingTimestamp=millis();    //timestamp this loop
+        readingDelayAdjustment %= readingDelayMS;
+        readingTimestamp -= readingDelayAdjustment;
       
       
        // Calculate the distance 
           
           distance = duration*speedOfSound;     //converts the duration to INCHES
           distance = distance/2;                //halves distance for round trip
-          distance = distance + distanceOffset; //adds compensation factor to measurement
+          distance = distance + distanceOffset; //adds compensation to measurement
           
       
       // converts distance to % of tank    
