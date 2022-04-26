@@ -31,7 +31,8 @@
     #define echoPin 15  // for ESP8266 - physical pin D8 connected to JSN-SR04T "dx echo" pin
   
   // Define variables for sensor:
-    float duration;               //Sensor pulse 
+    
+    float duration;               //Sensor pulse
     float distance;               //Sensor pulse
     float tankFull = 10;          //minimum distance (inches) between sensor and water level aka FULL
     float tankEmpty = 21;         //maximum distance (inches) between sensor and water level aka EMPTY
@@ -39,7 +40,10 @@
     float tankLevel = 0;          //the % of the tank level
     float tankLevelMax = 100;     //highest value (%) allowed for tank level
     float tankLevelMin = 0;       //lowest value (%) allowed for tank level
-    float distanceOffset = 2.54;  //compensates for reading
+    float distanceOffset = 1;     //compensates for reading in INCHES - not sure if this is common across all sensors
+    
+    const float speedOfSound = 0.0135;  //speed of sound: inches per microsecond
+    float durationTimeout = (tankEmpty*1.5*2)/speedOfSound;  //used to shorten wait time for pulse 
   
   // Define variables for smoothing array:
     int readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
@@ -83,20 +87,23 @@ void loop() {
 void getReading(){
    // Trigger the sensor by setting the trigPin high for 10 microseconds:
       digitalWrite(trigPin, HIGH);
-      delayMicroseconds(500);
+      delayMicroseconds(10);
       digitalWrite(trigPin, LOW);
    
-   // Read the echoPin. pulseIn() returns the duration (length of the pulse) in microseconds:
-      duration = pulseIn(echoPin, HIGH);
+   // Read the echoPin. pulseIn(pin, value, timeout) returns the duration (length of the pulse) in microseconds:
+               //
+      duration = pulseIn(echoPin, HIGH, durationTimeout);       //timeout equates to approx 70inch round trip - 
 
       if (duration > 1){
-        readingTimestamp=millis();    //timestampst this loop
+        readingTimestamp=millis();    //timestamp this loop
       
       
-       // Calculate the distance:
-          distance = duration*0.034/2;          //converts the duration to CM
-          distance = distance + distanceOffset; // adds compensation factor (in CM) to measurement 
-          distance = distance/2.54;             //converts CM to IN
+       // Calculate the distance 
+          
+          distance = duration*speedOfSound;     //converts the duration to INCHES
+          distance = distance/2;                //halves distance for round trip
+          distance = distance + distanceOffset; //adds compensation factor to measurement
+          
       
       // converts distance to % of tank    
           tankLevel = round(100*(1-((distance-tankFull)/(tankEmpty-tankFull))));
@@ -115,6 +122,10 @@ void getReading(){
 
 void serialMonitorOutput(){
       // Print the distance on the Serial Monitor (Ctrl+Shift+M):
+      Serial.print (millis());
+      Serial.print (" : Pulse duration (round trip) ");
+      Serial.print (duration);
+      Serial.print (" : ");
       Serial.print("Distance: ");
       Serial.print(distance);
       Serial.print (" in : Tank Fill level: ");
