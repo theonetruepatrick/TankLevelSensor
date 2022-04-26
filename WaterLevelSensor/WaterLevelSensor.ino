@@ -66,7 +66,7 @@ void loop() {
   digitalWrite(trigPin, LOW);
   
   if (millis()-readingTimestamp >= readingDelayMS){  // will execute only after pre-defined time period
-    readingTimestamp=millis();
+    
     getReading();
 
     
@@ -74,18 +74,7 @@ void loop() {
      
       
       
-      
-      
-      // Print the distance on the Serial Monitor (Ctrl+Shift+M):
-      Serial.print("Distance: ");
-      Serial.print(distance);
-      Serial.print (" in : Tank Fill level: ");
-      Serial.print(tankLevel);
-      Serial.print(" %");
-      if (tankLevel<=tankAlarm){
-        Serial.print ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
-      }
-      Serial.println();
+   
   
   }
   
@@ -99,16 +88,40 @@ void getReading(){
    
    // Read the echoPin. pulseIn() returns the duration (length of the pulse) in microseconds:
       duration = pulseIn(echoPin, HIGH);
-      
-   // Calculate the distance:
-      distance = duration*0.034/2;  //converts the duration to CM
-      distance = distance + distanceOffset; // adds compensation factor (in CM) to measurement 
-      distance = distance/2.54;     //converts CM to IN
-  
-  // converts distance to % of tank    
-      tankLevel = round(100*(1-((distance-tankFull)/(tankEmpty-tankFull))));
-      tankLevel = max(tankLevel, tankLevelMin);    //doesn't allow reading to go below 0
-      tankLevel = min(tankLevel, tankLevelMax);  //doesn't allow reading to go above 100
+
+      if (duration > 1){
+        readingTimestamp=millis();    //timestampst this loop
       
       
+       // Calculate the distance:
+          distance = duration*0.034/2;          //converts the duration to CM
+          distance = distance + distanceOffset; // adds compensation factor (in CM) to measurement 
+          distance = distance/2.54;             //converts CM to IN
+      
+      // converts distance to % of tank    
+          tankLevel = round(100*(1-((distance-tankFull)/(tankEmpty-tankFull))));
+          tankLevel = max(tankLevel, tankLevelMin);   //doesn't allow reading to go below 0
+          tankLevel = min(tankLevel, tankLevelMax);   //doesn't allow reading to go above 100
+      
+      // display output
+          serialMonitorOutput();
+       
+     } else {
+        readingTimestamp=millis()-readingDelayMS;     //if distance returns a "0", re-run reading
+        Serial.println("zero value returned, redoing reading....");
+     }
+      
+}
+
+void serialMonitorOutput(){
+      // Print the distance on the Serial Monitor (Ctrl+Shift+M):
+      Serial.print("Distance: ");
+      Serial.print(distance);
+      Serial.print (" in : Tank Fill level: ");
+      Serial.print(tankLevel);
+      Serial.print(" %");
+      if (tankLevel<=tankAlarm){
+        Serial.print ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
+      }
+      Serial.println();
 }
