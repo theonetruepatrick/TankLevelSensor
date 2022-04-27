@@ -59,16 +59,16 @@
     float readingAverage = 0;
 
   //Optional: Display uptime in human friendly format
-    const int constSeconds = 1000;
-    const int constMinutes = 60000;
-    const int constHours = 3600000;
-    const int constDays = 86400000;
+    const int constSeconds = 1000;  //ms per Second
+    const int constMinutes = 60000; //ms per Minute
+    const int constHours = 3600000; //ms per Hour
+    const int constDays = 86400000; //ms per Day
     int tsSeconds = 0;
     int tsMinutes = 0;
     int tsHours = 0;
     int tsDays = 0;
     
-    String tsUptime="";
+    String tsUptime="";     //string used to compile the uptime
   
 
   
@@ -125,7 +125,7 @@ void getReading(){
       // display output
           serialMonitorOutput();
        
-     } else {
+     } else {   
         readingTimestamp=millis()-readingDelayMS;     //if distance returns a "0", re-run reading
         Serial.print (readingTimestamp);
         Serial.println(" : Error: zero value returned, redoing reading....");
@@ -143,23 +143,23 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
         Serial.println ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
       }
       
-      Serial.print ("     Uptime (D:H:M:S): ");
+      Serial.print ("     Uptime (D:H:M:S):\t\t\t");
        Serial.println (tsUptime);
        
-      Serial.print ("     Pulse duration (round trip) ");
-      Serial.print ((int)duration);
-      Serial.println ("μs");
+      Serial.print ("     Pulse duration (round trip):\t");
+      Serial.print (duration,0);
+      Serial.println (" μs");
       
-      Serial.print("     Distance to liquid surface: ");
-        Serial.print(distance);
+      Serial.print("     Distance to liquid surface:\t");
+        Serial.print(distance,1);
         Serial.println (" in");
      
-      Serial.print ("     Current tank reading: ");
-        Serial.print(tankLevel);
+      Serial.print ("     Current tank reading:\t\t");
+        Serial.print(tankLevel,1);
         Serial.println("%");
 
-      Serial.print ("     Average of tank reading: ");
-        Serial.print(readingAverage);
+      Serial.print ("     Average of tank reading:\t\t");
+        Serial.print(readingAverage,1);
         Serial.print("%");
         if (readingCount < numReadings) {
           Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
@@ -201,19 +201,19 @@ void millisToHuman(){
   tsMinutes = ((readingTimestamp%constDays)%constHours)/constMinutes;
   tsSeconds = (((readingTimestamp%constDays)%constHours)%constMinutes)/constSeconds;
 
-  if (tsDays<10){tsUptime+="0";}
+  if (tsDays<10){tsUptime+="0";}          //adds leading zero if needed
   tsUptime +=String(tsDays);
   tsUptime +=":";
   
-    if (tsHours<10){tsUptime+="0";}
+    if (tsHours<10){tsUptime+="0";}       //adds leading zero if needed
     tsUptime +=String(tsHours);
     tsUptime +=":";
   
-      if (tsMinutes<10){tsUptime+="0";}
+      if (tsMinutes<10){tsUptime+="0";}   //adds leading zero if needed
       tsUptime +=String(tsMinutes);
       tsUptime +=":";
   
-        if (tsSeconds<10){tsUptime+="0";}
+        if (tsSeconds<10){tsUptime+="0";} //adds leading zero if needed
         tsUptime +=String(tsSeconds);
   
 }
