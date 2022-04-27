@@ -47,7 +47,7 @@
     float durationTimeout = (tankEmpty*1.5*2)/speedOfSound;  //used to shorten wait time for pulse 
   
   // Define variables for smoothing array:
-    int readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
+    unsigned long readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
     int readingDelayMS = 60000;  //time gap between readings; default is 60 seconds
     int readingDelayAdjustment;  //me being WAY too anal retentive
     const int numReadings = 15;  //number of readings to be averaged/smoothed
@@ -59,10 +59,10 @@
     float readingAverage = 0;
 
   //Optional: Display uptime in human friendly format
-    unsigned long constSeconds = 1000;
-    unsigned long constMinutes = 60000;
-    unsigned long constHours = 3600000;
-    unsigned long constDays = 86400000;
+    const int constSeconds = 1000;
+    const int constMinutes = 60000;
+    const int constHours = 3600000;
+    const int constDays = 86400000;
     int tsSeconds = 0;
     int tsMinutes = 0;
     int tsHours = 0;
@@ -147,11 +147,12 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
        Serial.println (tsUptime);
        
       Serial.print ("     Pulse duration (round trip) ");
-      Serial.println (duration);
+      Serial.print ((int)duration);
+      Serial.println ("μs");
       
       Serial.print("     Distance to liquid surface: ");
         Serial.print(distance);
-        Serial.println (" inch");
+        Serial.println (" in");
      
       Serial.print ("     Current tank reading: ");
         Serial.print(tankLevel);
