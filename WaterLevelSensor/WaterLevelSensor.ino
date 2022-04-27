@@ -43,7 +43,9 @@
     float durationTimeout = (tankEmpty*1.5*2)/speedOfSound;  //used to shorten wait time for pulse 
   
   // Define variables for smoothing array:
+
     unsigned long readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
+
     int readingDelayMS = 60000;  //time gap between readings; default is 60 seconds
     int readingDelayAdjustment;  //me being WAY too anal retentive
     const int numReadings = 15;  //number of readings to be averaged/smoothed
@@ -53,6 +55,7 @@
 
     float readingSumTotal = 0;
     float readingAverage = 0;
+
 
   //Optional: Display uptime in human friendly format
     const int constSeconds = 1000;  //ms per Second
@@ -65,6 +68,7 @@
     int tsDays = 0;
     
     String tsUptime="";     //string used to compile the uptime
+
   
 
   
@@ -72,12 +76,14 @@ void setup() {
     Serial.begin(115200);
     Serial.println();
     Serial.println ("Booting Up.....");
+
   
   // Define inputs and outputs
     pinMode(trigPin, OUTPUT);  //JSN-SR04T: dx trig
     pinMode(echoPin, INPUT);   //JSN-SR04T: tx echo 
  
   
+
 }
 
 void loop() {
@@ -89,6 +95,7 @@ void loop() {
     getReading();
 
   }
+
   
 }
 
@@ -211,5 +218,95 @@ void millisToHuman(){
   
         if (tsSeconds<10){tsUptime+="0";} //adds leading zero if needed
         tsUptime +=String(tsSeconds);
+
   
+}
+
+void getReading(){
+   // Trigger the sensor by setting the trigPin high for 10 microseconds:
+      digitalWrite(trigPin, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(trigPin, LOW);  //
+   
+      duration = pulseIn(echoPin, HIGH, durationTimeout); // Read the echoPin for round-trip pulse time.
+
+      if (duration > 10){  //sometimes echo fails; returns zero
+        readingTimestamp=millis();    //timestamp this loop
+        readingDelayAdjustment= readingTimestamp % readingDelayMS;
+        readingTimestamp -= readingDelayAdjustment;
+     
+       // Calculate the distance 
+          distance = duration*speedOfSound;     //converts the duration to INCHES
+          distance /= 2;                //halves distance for round trip
+          distance += distanceOffset; //adds compensation to measurement
+       
+      // converts distance to % of tank    
+          tankLevel = round(100*(1-((distance-tankFull)/(tankEmpty-tankFull))));
+          tankLevel = max(tankLevel, tankLevelMin);   //doesn't allow reading to go below 0
+          tankLevel = min(tankLevel, tankLevelMax);   //doesn't allow reading to go above 100
+      
+      // Call the smoothing formula
+          smoothData();
+          
+      // display output
+          serialMonitorOutput();
+       
+     } else {
+        readingTimestamp=millis()-readingDelayMS;     //if distance returns a "0", re-run reading
+        Serial.print (readingTimestamp);
+        Serial.println(" : Error: zero value returned, redoing reading....");
+     }
+      
+}
+
+void serialMonitorOutput(){
+      // Print the distance on the Serial Monitor (Ctrl+Shift+M):
+      
+      Serial.println (millis());
+      if (tankLevel<=tankAlarm){
+        Serial.println ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
+      }
+      Serial.print ("     Pulse duration (round trip) ");
+      Serial.println (duration);
+      
+      Serial.print("     Distance to liquid surface: ");
+      Serial.print(distance);
+      Serial.println (" inch");
+     
+      Serial.print ("     Current tank reading: ");
+      Serial.print(tankLevel);
+      Serial.println("%");
+
+      Serial.print ("     Average of tank reading: ");
+      Serial.print(readingAverage);
+      Serial.print("%");
+      if (readingCount < numReadings) {
+        Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
+      }
+      Serial.println();
+      Serial.println();
+}
+
+void smoothData(){
+    readingSumTotal -= readings[readIndex]; // subtract the last reading from the total
+    readings[readIndex] = tankLevel;        // assigns current level to array
+    readingSumTotal += readings[readIndex]; // add the currentreading to the total
+    
+    readIndex = readIndex + 1;              // advance to the next position in the array:
+    if (readIndex >= numReadings) {         // if at the end of the array, wrap around to the beginning
+      readIndex = 0;
+    }
+    if (readingCount < numReadings){        //accomodates initial lack of data until array is fully populated 
+      readingCount++;
+      readingAverage = readingSumTotal / readingCount;
+                                          
+    } else {
+      readingAverage = readingSumTotal / numReadings;
+    }
+}
+
+void reboot() {
+  wdt_disable();
+  wdt_enable(WDTO_15MS);
+  while (1) {}
 }
