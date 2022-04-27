@@ -134,33 +134,37 @@ void getReading(){
 }
 
 void serialMonitorOutput(){   //Displays the information to Serial Monitor
-      
       millisToHuman();
-      Serial.print ("Uptime (D:H:M:S): ");
-       Serial.println (tsUptime);
-      Serial.print ("milliseconds: ");
+      
+      Serial.print ("Sensor Timestamp (ms): ");
        Serial.println (readingTimestamp);
-      if (tankLevel<=tankAlarm){
+     
+     if (tankLevel<=tankAlarm){
         Serial.println ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
       }
+      
+      Serial.print ("     Uptime (D:H:M:S): ");
+       Serial.println (tsUptime);
+       
       Serial.print ("     Pulse duration (round trip) ");
       Serial.println (duration);
       
       Serial.print("     Distance to liquid surface: ");
-      Serial.print(distance);
-      Serial.println (" inch");
+        Serial.print(distance);
+        Serial.println (" inch");
      
       Serial.print ("     Current tank reading: ");
-      Serial.print(tankLevel);
-      Serial.println("%");
+        Serial.print(tankLevel);
+        Serial.println("%");
 
       Serial.print ("     Average of tank reading: ");
-      Serial.print(readingAverage);
-      Serial.print("%");
-      if (readingCount < numReadings) {
-        Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
-      }
-      Serial.println();
+        Serial.print(readingAverage);
+        Serial.print("%");
+        if (readingCount < numReadings) {
+          Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
+        }
+        Serial.println();
+        
       Serial.println();
 }
 
