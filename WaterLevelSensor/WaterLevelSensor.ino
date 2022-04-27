@@ -20,10 +20,6 @@
  *    5) [future] Send text if tank level is below a pre-defined limit
  * 
  * 
- * 
- * 
- * 
- * 
  */
 
   // Define Trig and Echo pin:
