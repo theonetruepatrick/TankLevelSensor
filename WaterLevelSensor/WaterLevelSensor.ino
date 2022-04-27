@@ -20,10 +20,6 @@
  *    5) [future] Send text if tank level is below a pre-defined limit
  * 
  * 
- * 
- * 
- * 
- * 
  */
 
   // Define Trig and Echo pin:
@@ -47,7 +43,7 @@
     float durationTimeout = (tankEmpty*1.5*2)/speedOfSound;  //used to shorten wait time for pulse 
   
   // Define variables for smoothing array:
-    int readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
+    unsigned long readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
     int readingDelayMS = 60000;  //time gap between readings; default is 60 seconds
     int readingDelayAdjustment;  //me being WAY too anal retentive
     const int numReadings = 15;  //number of readings to be averaged/smoothed
@@ -58,6 +54,17 @@
     float readingSumTotal = 0;
     float readingAverage = 0;
 
+  //Optional: Display uptime in human friendly format
+    const int constSeconds = 1000;  //ms per Second
+    const int constMinutes = 60000; //ms per Minute
+    const int constHours = 3600000; //ms per Hour
+    const int constDays = 86400000; //ms per Day
+    int tsSeconds = 0;
+    int tsMinutes = 0;
+    int tsHours = 0;
+    int tsDays = 0;
+    
+    String tsUptime="";     //string used to compile the uptime
   
 
   
@@ -69,7 +76,8 @@ void setup() {
   // Define inputs and outputs
     pinMode(trigPin, OUTPUT);  //JSN-SR04T: dx trig
     pinMode(echoPin, INPUT);   //JSN-SR04T: tx echo 
-
+ 
+  
 }
 
 void loop() {
@@ -113,7 +121,7 @@ void getReading(){
       // display output
           serialMonitorOutput();
        
-     } else {
+     } else {   
         readingTimestamp=millis()-readingDelayMS;     //if distance returns a "0", re-run reading
         Serial.print (readingTimestamp);
         Serial.println(" : Error: zero value returned, redoing reading....");
@@ -121,31 +129,39 @@ void getReading(){
       
 }
 
-void serialMonitorOutput(){
-      // Print the distance on the Serial Monitor (Ctrl+Shift+M):
+void serialMonitorOutput(){   //Displays the information to Serial Monitor
+      millisToHuman();
       
-      Serial.println (millis());
-      if (tankLevel<=tankAlarm){
+      Serial.print ("Sensor Timestamp (ms): ");
+       Serial.println (readingTimestamp);
+     
+     if (tankLevel<=tankAlarm){
         Serial.println ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
       }
-      Serial.print ("     Pulse duration (round trip) ");
-      Serial.println (duration);
       
-      Serial.print("     Distance to liquid surface: ");
-      Serial.print(distance);
-      Serial.println (" inch");
+      Serial.print ("     Uptime (D:H:M:S):\t\t\t");
+       Serial.println (tsUptime);
+       
+      Serial.print ("     Pulse duration (round trip):\t");
+      Serial.print (duration,0);
+      Serial.println (" μs");
+      
+      Serial.print("     Distance to liquid surface:\t");
+        Serial.print(distance,1);
+        Serial.println (" in");
      
-      Serial.print ("     Current tank reading: ");
-      Serial.print(tankLevel);
-      Serial.println("%");
+      Serial.print ("     Current tank reading:\t\t");
+        Serial.print(tankLevel,1);
+        Serial.println("%");
 
-      Serial.print ("     Average of tank reading: ");
-      Serial.print(readingAverage);
-      Serial.print("%");
-      if (readingCount < numReadings) {
-        Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
-      }
-      Serial.println();
+      Serial.print ("     Average of tank reading:\t\t");
+        Serial.print(readingAverage,1);
+        Serial.print("%");
+        if (readingCount < numReadings) {
+          Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
+        }
+        Serial.println();
+        
       Serial.println();
 }
 
@@ -171,4 +187,29 @@ void reboot() {
   wdt_disable();
   wdt_enable(WDTO_15MS);
   while (1) {}
+}
+
+void millisToHuman(){
+  tsUptime="";
+  
+  tsDays=readingTimestamp/constDays;
+  tsHours = (readingTimestamp%constDays)/constHours;
+  tsMinutes = ((readingTimestamp%constDays)%constHours)/constMinutes;
+  tsSeconds = (((readingTimestamp%constDays)%constHours)%constMinutes)/constSeconds;
+
+  if (tsDays<10){tsUptime+="0";}          //adds leading zero if needed
+  tsUptime +=String(tsDays);
+  tsUptime +=":";
+  
+    if (tsHours<10){tsUptime+="0";}       //adds leading zero if needed
+    tsUptime +=String(tsHours);
+    tsUptime +=":";
+  
+      if (tsMinutes<10){tsUptime+="0";}   //adds leading zero if needed
+      tsUptime +=String(tsMinutes);
+      tsUptime +=":";
+  
+        if (tsSeconds<10){tsUptime+="0";} //adds leading zero if needed
+        tsUptime +=String(tsSeconds);
+  
 }
