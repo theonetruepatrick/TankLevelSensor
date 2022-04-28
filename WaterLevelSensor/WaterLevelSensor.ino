@@ -257,12 +257,9 @@ void millisToHuman(){
   
 }
 
-void handleRoot()
-{
-   //String TempF =String(dht.readTemperature(true));
-   //String Humid = String(int(dht.readHumidity()));
-   UpTimeOutput();
-   delay(1000);
+void handleRoot() {
+      millisToHuman();
+   
    //user interface HTML code----------------
       html = "<!DOCTYPE html><html><head>";
       html += "<title>Water Tank Level Sensor</title>";
@@ -273,14 +270,53 @@ void handleRoot()
       html += "    <meta http-equiv='expires' content='Tue, 01 Jan 1980 1:00:00 GMT' />";
       html += "    <meta http-equiv='Pragma' content='no-cache'>";
       html += "<h1>Water Tank Level Sensor</h1>";
-      html += "<p>device IP: &emsp;&ensp; "+SensorIP+"<br>";
-      html +=     "device MAC: &ensp;" +  MACAddy +"<br>";
-      html +=     "device up time: "+UpTime+"</p>";
-      html +="<h2>Current Air Temp: "+String(dht.readTemperature(true))+"&degF<br>";
-      html +="Current Humidity: "+String(int(dht.readHumidity()))+".0%</h2>";
-      html +="<form action='/reboot' method='post'>";
-      html +="<input type='submit' value='REBOOT SENSOR'>";
-      html +="</form>";
-      html +="</body></html>";
-   server.send(200,"text/html", html);
+
+
+
+      
+      html += "<p>Sensor Timestamp (ms): ";
+        html += readingTimestamp;
+        html += "</p>";
+     if (tankLevel<=tankAlarm){
+        html += "<h3>  !!!ALERT!!!    Low Tank Level    !!!ALERT!!! </h3>";
+      }
+
+      html += "<p>Address: ";
+        html += SensorIP;
+        html += "</p>";
+      
+      html += "<p>MAC Address: ";
+        html += MACAddy;
+        html += "</p>";
+   
+      html += "<p>Uptime (D:H:M:S): ";
+        html += tsUptime;
+        html += "</p>";
+        
+      html += "<p>Pulse duration (round trip): ";
+        html += duration;
+        html += " μs";
+        html += "</p>";
+      
+      html += "<p>Distance to liquid surface: ";
+        html +=distance;
+        html += "in";
+        html += "</p>";
+        
+      html += "<p>Current tank reading: ";
+        html += tankLevel;
+        html += "%";
+        html += "</p>";
+
+      html += "<p>Average of tank reading: ";
+        html +=readingAverage;
+        html += "%";
+        if (readingCount < numReadings) {
+          html += "**");     //visual flag to indicate that current average is not a full set of data yet
+        }
+        html += "</p>";
+        
+     html +="</body></html>";
+     
+     server.send(200,"text/html", html);
 }
