@@ -119,6 +119,9 @@ void setup() {
 }
 
 void loop() {
+  //captures HTTP request
+  server.handleClient();
+  
   // Clear the trigPin by setting it LOW:
   digitalWrite(trigPin, LOW);
   
@@ -177,29 +180,29 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
         Serial.println ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
       }
 
-      Serial.print("\t Address:\t\t");
+      Serial.print("\t Address:\t\t\t");
         Serial.println(SensorIP);
-      Serial.print("\t MAC Address:\t\t");
+      Serial.print("\t MAC Address:\t\t\t");
       Serial.println(MACAddy);
 
 
       
-      Serial.print ("\t Uptime (D:H:M:S):\t\t\t");
+      Serial.print ("\t Uptime (D:H:M:S):\t\t");
        Serial.println (tsUptime);
        
       Serial.print ("\t Pulse duration (round trip):\t");
       Serial.print (duration,0);
-      Serial.println (" μs");
+      Serial.println (" µ");
       
       Serial.print("\t Distance to liquid surface:\t");
         Serial.print(distance,1);
         Serial.println (" in");
      
-      Serial.print ("\t Current tank reading:\t\t");
+      Serial.print ("\t Tank level - Current:\t\t");
         Serial.print(tankLevel,1);
         Serial.println("%");
 
-      Serial.print ("\t Average of tank reading:\t\t");
+      Serial.print ("\t Tank level - Running Avg:\t");
         Serial.print(readingAverage,1);
         Serial.print("%");
         if (readingCount < numReadings) {
@@ -267,7 +270,7 @@ void handleRoot() {
    //user interface HTML code----------------
       html = "<!DOCTYPE html><html><head>";
       html += "<title>Water Tank Level Sensor</title>";
-      html += "<meta http-equiv='refresh' content='5'></head><body>";
+      html += "<meta http-equiv='refresh' content='60'></head><body>";
       html += "    <meta http-equiv='cache-control' content='max-age=0' />";
       html += "    <meta http-equiv='cache-control' content='no-cache' />";
       html += "    <meta http-equiv='expires' content='0' />";
@@ -275,9 +278,6 @@ void handleRoot() {
       html += "    <meta http-equiv='Pragma' content='no-cache'>";
       html += "<h1>Water Tank Level Sensor</h1>";
 
-
-
-      
       html += "<p>Sensor Timestamp (ms): ";
         html += readingTimestamp;
         html += "</p>";
@@ -299,7 +299,7 @@ void handleRoot() {
         
       html += "<p>Pulse duration (round trip): ";
         html += duration;
-        html += " μs";
+        html += " &micro s";
         html += "</p>";
       
       html += "<p>Distance to liquid surface: ";
