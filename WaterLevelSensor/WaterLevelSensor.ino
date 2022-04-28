@@ -192,7 +192,7 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
        
       Serial.print ("\t Pulse duration (round trip):\t");
       Serial.print (duration,0);
-      Serial.println (" µ");
+      Serial.println (" µs");
       
       Serial.print("\t Distance to liquid surface:\t");
         Serial.print(distance,1);
@@ -277,59 +277,59 @@ void handleRoot() {
       html += "    <meta http-equiv='expires' content='Tue, 01 Jan 1980 1:00:00 GMT' />";
       html += "    <meta http-equiv='Pragma' content='no-cache'>";
       html += "<h1>Water Tank Level Sensor</h1>";
-      
+      html += "<p><small>Note: Reading updates every 60 seconds</small></p>";
       if (tankLevel<=tankAlarm){
-        html += "<h3>  !!!ALERT!!!    Low Tank Level    !!!ALERT!!! </h3>";
+        html += "<p style='color:red'><big>  !!!ALERT!!!    Low Tank Level    !!!ALERT!!! </big></p>";
       }
 
       html +="<table>";
         html +="<tr>";
-          html += "<td>";
+          html += "<td style='text-align:right'>";
             html += "Sensor Timestamp (ms):";
           html += "</td><td>";
             html += readingTimestamp;
           html += "</td></tr>";
      
-          html += "<tr><td>";
+          html += "<tr><td style='text-align:right'>";
             html += "IP Address:";
           html += "</td><td>";
             html += SensorIP;
           html += "</td></tr>";
 
-          html += "<tr><td>";
+          html += "<tr><td style='text-align:right'>";
             html += "MAC Address:";
           html += "</td><td>";
             html += MACAddy;
           html += "</td></tr>";
    
-          html += "<tr><td>";
+          html += "<tr><td style='text-align:right'>";
             html += "Uptime (D:H:M:S):";
           html += "</td><td>"; 
             html += tsUptime;
           html += "</td></tr>";
 
-          html += "<tr><td>";
+          html += "<tr><td style='text-align:right'>";
             html += "Pulse duration (round trip):";
           html += "</td><td>";
             html += duration;
             html += " &micros";
           html += "</td></tr>";
 
-          html += "<tr><td>";
+          html += "<tr><td style='text-align:right'>";
             html += "Distance to liquid surface:";
           html += "</td><td>";
             html +=distance;
             html += "in";
           html += "</td></tr>";
 
-          html += "<tr><td>";
+          html += "<tr><td style='text-align:right'>";
             html += "Current tank reading:";
           html += "</td><td>";
             html += tankLevel;
             html += "%";
           html += "</td></tr>";
 
-          html += "<tr><td>";
+          html += "<tr><td style='text-align:right'>";
             html += "Average of tank reading:";
           html += "</td><td>";
             html +=readingAverage;
