@@ -180,7 +180,7 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
         Serial.println ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
       }
 
-      Serial.print("\t Address:\t\t\t");
+      Serial.print("\t IP Address:\t\t\t");
         Serial.println(SensorIP);
       Serial.print("\t MAC Address:\t\t\t");
       Serial.println(MACAddy);
@@ -277,49 +277,69 @@ void handleRoot() {
       html += "    <meta http-equiv='expires' content='Tue, 01 Jan 1980 1:00:00 GMT' />";
       html += "    <meta http-equiv='Pragma' content='no-cache'>";
       html += "<h1>Water Tank Level Sensor</h1>";
-
-      html += "<p>Sensor Timestamp (ms): ";
-        html += readingTimestamp;
-        html += "</p>";
-     if (tankLevel<=tankAlarm){
+      
+      if (tankLevel<=tankAlarm){
         html += "<h3>  !!!ALERT!!!    Low Tank Level    !!!ALERT!!! </h3>";
       }
 
-      html += "<p>Address: ";
-        html += SensorIP;
-        html += "</p>";
-      
-      html += "<p>MAC Address: ";
-        html += MACAddy;
-        html += "</p>";
-   
-      html += "<p>Uptime (D:H:M:S): ";
-        html += tsUptime;
-        html += "</p>";
-        
-      html += "<p>Pulse duration (round trip): ";
-        html += duration;
-        html += " &micro s";
-        html += "</p>";
-      
-      html += "<p>Distance to liquid surface: ";
-        html +=distance;
-        html += "in";
-        html += "</p>";
-        
-      html += "<p>Current tank reading: ";
-        html += tankLevel;
-        html += "%";
-        html += "</p>";
+      html +="<table>";
+        html +="<tr>";
+          html += "<td>";
+            html += "Sensor Timestamp (ms):";
+          html += "</td><td>";
+            html += readingTimestamp;
+          html += "</td></tr>";
+     
+          html += "<tr><td>";
+            html += "IP Address:";
+          html += "</td><td>";
+            html += SensorIP;
+          html += "</td></tr>";
 
-      html += "<p>Average of tank reading: ";
-        html +=readingAverage;
-        html += "%";
-        if (readingCount < numReadings) {
-          html += "**";     //visual flag to indicate that current average is not a full set of data yet
-        }
-        html += "</p>";
-        
+          html += "<tr><td>";
+            html += "MAC Address:";
+          html += "</td><td>";
+            html += MACAddy;
+          html += "</td></tr>";
+   
+          html += "<tr><td>";
+            html += "Uptime (D:H:M:S):";
+          html += "</td><td>"; 
+            html += tsUptime;
+          html += "</td></tr>";
+
+          html += "<tr><td>";
+            html += "Pulse duration (round trip):";
+          html += "</td><td>";
+            html += duration;
+            html += " &micros";
+          html += "</td></tr>";
+
+          html += "<tr><td>";
+            html += "Distance to liquid surface:";
+          html += "</td><td>";
+            html +=distance;
+            html += "in";
+          html += "</td></tr>";
+
+          html += "<tr><td>";
+            html += "Current tank reading:";
+          html += "</td><td>";
+            html += tankLevel;
+            html += "%";
+          html += "</td></tr>";
+
+          html += "<tr><td>";
+            html += "Average of tank reading:";
+          html += "</td><td>";
+            html +=readingAverage;
+            html += "%";
+              if (readingCount < numReadings) {
+                html += "**";     //visual flag to indicate that current average is not a full set of data yet
+              }
+        html += "</td></tr>";
+
+     html +="</table>";
      html +="</body></html>";
      
      server.send(200,"text/html", html);
