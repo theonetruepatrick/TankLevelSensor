@@ -22,6 +22,15 @@
  * 
  */
 
+ 
+  // NETWORK CLIENT Config
+    #include <ESP8266WiFi.h>
+    #include <ESP8266HTTPClient.h>
+    #include <WiFiClient.h>
+   
+    const char* ssid     = "serenity";
+    const char* password = "8r0wnc0at5";
+
   // Define Trig and Echo pin:
     #define trigPin 2   // for ESP8266 - physical pin D4 connected to JSN-SR04T "dx trig" pin
     #define echoPin 15  // for ESP8266 - physical pin D8 connected to JSN-SR04T "dx echo" pin
