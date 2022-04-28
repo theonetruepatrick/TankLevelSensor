@@ -27,9 +27,13 @@
     #include <ESP8266WiFi.h>
     #include <ESP8266HTTPClient.h>
     #include <WiFiClient.h>
-   
     const char* ssid     = "serenity";
     const char* password = "8r0wnc0at5";
+
+ // Onboard WEB SERVER Config
+    #include <ESP8266WebServer.h>
+    ESP8266WebServer server;
+    String html;  //variable used for output content to web client
 
   // Define Trig and Echo pin:
     #define trigPin 2   // for ESP8266 - physical pin D4 connected to JSN-SR04T "dx trig" pin
@@ -85,8 +89,31 @@ void setup() {
   // Define inputs and outputs
     pinMode(trigPin, OUTPUT);  //JSN-SR04T: dx trig
     pinMode(echoPin, INPUT);   //JSN-SR04T: tx echo 
- 
   
+  //NETWORK CLIENT setup
+      WiFi.begin(ssid, password);
+      Serial.println("Connecting");
+      while(WiFi.status() != WL_CONNECTED) { 
+        delay(500);
+        Serial.print(".");
+      }
+        delay(15000);
+      MACAddy = WiFi.macAddress();
+      SensorIP = WiFi.localIP().toString();
+      
+      Serial.println("");
+      Serial.print("Connected to WiFi network - IP Address: ");
+        Serial.println(SensorIP);
+      Serial.print("MAC Address: ");
+      Serial.println(MACAddy);
+
+  //WEB SERVER (on demand) setup
+    server.on("/", handleRoot);   //default web browser request gets directed to "handleRoot"
+    server.begin();
+    Serial.println();
+    Serial.println("....STARTING HTTP SERVER....");
+    Serial.println();
+      
 }
 
 void loop() {
@@ -147,23 +174,30 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
      if (tankLevel<=tankAlarm){
         Serial.println ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
       }
+
+      Serial.print("\t Address:\t\t");
+        Serial.println(SensorIP);
+      Serial.print("\t MAC Address:\t\t");
+      Serial.println(MACAddy);
+
+
       
-      Serial.print ("     Uptime (D:H:M:S):\t\t\t");
+      Serial.print ("\t Uptime (D:H:M:S):\t\t\t");
        Serial.println (tsUptime);
        
-      Serial.print ("     Pulse duration (round trip):\t");
+      Serial.print ("\t Pulse duration (round trip):\t");
       Serial.print (duration,0);
       Serial.println (" μs");
       
-      Serial.print("     Distance to liquid surface:\t");
+      Serial.print("\t Distance to liquid surface:\t");
         Serial.print(distance,1);
         Serial.println (" in");
      
-      Serial.print ("     Current tank reading:\t\t");
+      Serial.print ("\t Current tank reading:\t\t");
         Serial.print(tankLevel,1);
         Serial.println("%");
 
-      Serial.print ("     Average of tank reading:\t\t");
+      Serial.print ("\t Average of tank reading:\t\t");
         Serial.print(readingAverage,1);
         Serial.print("%");
         if (readingCount < numReadings) {
@@ -221,4 +255,32 @@ void millisToHuman(){
         if (tsSeconds<10){tsUptime+="0";} //adds leading zero if needed
         tsUptime +=String(tsSeconds);
   
+}
+
+void handleRoot()
+{
+   //String TempF =String(dht.readTemperature(true));
+   //String Humid = String(int(dht.readHumidity()));
+   UpTimeOutput();
+   delay(1000);
+   //user interface HTML code----------------
+      html = "<!DOCTYPE html><html><head>";
+      html += "<title>Water Tank Level Sensor</title>";
+      html += "<meta http-equiv='refresh' content='5'></head><body>";
+      html += "    <meta http-equiv='cache-control' content='max-age=0' />";
+      html += "    <meta http-equiv='cache-control' content='no-cache' />";
+      html += "    <meta http-equiv='expires' content='0' />";
+      html += "    <meta http-equiv='expires' content='Tue, 01 Jan 1980 1:00:00 GMT' />";
+      html += "    <meta http-equiv='Pragma' content='no-cache'>";
+      html += "<h1>Water Tank Level Sensor</h1>";
+      html += "<p>device IP: &emsp;&ensp; "+SensorIP+"<br>";
+      html +=     "device MAC: &ensp;" +  MACAddy +"<br>";
+      html +=     "device up time: "+UpTime+"</p>";
+      html +="<h2>Current Air Temp: "+String(dht.readTemperature(true))+"&degF<br>";
+      html +="Current Humidity: "+String(int(dht.readHumidity()))+".0%</h2>";
+      html +="<form action='/reboot' method='post'>";
+      html +="<input type='submit' value='REBOOT SENSOR'>";
+      html +="</form>";
+      html +="</body></html>";
+   server.send(200,"text/html", html);
 }
