@@ -29,6 +29,8 @@
     #include <WiFiClient.h>
     const char* ssid     = "serenity";
     const char* password = "8r0wnc0at5";
+    String MACAddy;  //network MAC address
+    String SensorIP; //network IP address (DHCP)
 
  // Onboard WEB SERVER Config
     #include <ESP8266WebServer.h>
@@ -258,6 +260,8 @@ void millisToHuman(){
 }
 
 void handleRoot() {
+      //this should replicated what is displyed on Serial Monitor
+      
       millisToHuman();
    
    //user interface HTML code----------------
@@ -312,7 +316,7 @@ void handleRoot() {
         html +=readingAverage;
         html += "%";
         if (readingCount < numReadings) {
-          html += "**");     //visual flag to indicate that current average is not a full set of data yet
+          html += "**";     //visual flag to indicate that current average is not a full set of data yet
         }
         html += "</p>";
         
