@@ -166,7 +166,7 @@ void getReading(){
           tankLevel = min(tankLevel, tankLevelMax);   //doesn't allow reading to go above 100
       
       // Call the smoothing formula
-          dataSmoothing();
+          dataAnalysis();
           
       // display output
           serialMonitorOutput();
@@ -179,9 +179,7 @@ void getReading(){
       
 }
 
-
-
-void dataSmoothing(){
+void dataAnalysis(){
     readingDelta=readingAverage;  //used for dataRateOfChange
     
     readingSumTotal -= readings[readIndex]; // subtract the last reading from the total
@@ -200,10 +198,15 @@ void dataSmoothing(){
     } else {
       readingAverage = readingSumTotal / numReadings;
     }
+
+    if (readingCount > 2){
+      readingDelta=0; //eliminates skewed analysis with first reading
+    } else {
+      readingDelta-=readingAverage; //subtracts updated average from previous average
+    }
+
     
-    readingDelta-=readingAverage; //subtracts updated average from previous average
-   
- //this will work essentially like the dataSmoothing but tracks the trend of the average change over time
+ //this will work essentially like the dataAnalysis but tracks the trend of the average change over time
     ROCSumTotal -= readingROC[ROCIndex];  // subtract the last reading from the total
     readingROC[ROCIndex] = readingDelta;  // assigns current level to array
     ROCSumTotal += readingROC[ROCIndex];  // add the currentreading to the total
@@ -250,6 +253,7 @@ void millisToHuman(){
         tsUptime +=String(tsSeconds);
   
 }
+
 void serialMonitorOutput(){   //Displays the information to Serial Monitor
       millisToHuman();
       
@@ -300,10 +304,10 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
         
       Serial.println();
 }
-void handleRoot() {
-      //this should replicated what is displyed on Serial Monitor
-      
-      millisToHuman();
+
+void handleRoot() {          //Displays the information to Web Browser 
+                             //this should replicated what is displyed on Serial Monitor
+      millisToHuman();  //grabs human readable timestamp
    
    //user interface HTML code----------------
       html = "<!DOCTYPE html><html><head>";
@@ -361,22 +365,34 @@ void handleRoot() {
           html += "</td></tr>";
 
           html += "<tr><td style='text-align:right'>";
-            html += "Current tank reading:";
+            html += "Tank reading - Current:";
           html += "</td><td>";
             html += tankLevel;
             html += "%";
           html += "</td></tr>";
 
           html += "<tr><td style='text-align:right'>";
-            html += "Average of tank reading:";
+            html += "Tank reading 15 Minute Average:";
           html += "</td><td>";
             html +=readingAverage;
             html += "%";
               if (readingCount < numReadings) {
                 html += "**";     //visual flag to indicate that current average is not a full set of data yet
               }
-        html += "</td></tr>";
+          html += "</td></tr>";
 
+
+          html += "<tr><td style='text-align:right'>";
+            html += "Tank reading 15 Minute Trend:";
+          html += "</td><td>";
+            html +=ROCTrend;
+            html += "%";
+              if (readingCount < numReadings) {
+                html += "**";     //visual flag to indicate that current average is not a full set of data yet
+              }
+          html += "</td></tr>";
+
+          
      html +="</table>";
      html +="</body></html>";
      
