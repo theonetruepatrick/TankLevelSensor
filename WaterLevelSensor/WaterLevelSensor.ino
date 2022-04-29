@@ -82,6 +82,7 @@
 
     //Time To Empty
       float hrsToEmpty=0;
+      String lowSampleFlag;
     
   //Optional: Display uptime in human friendly format
     const int constSeconds = 1000;  //ms per Second
