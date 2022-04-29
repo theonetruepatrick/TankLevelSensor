@@ -179,6 +179,77 @@ void getReading(){
       
 }
 
+
+
+void dataSmoothing(){
+    readingDelta=readingAverage;  //used for dataRateOfChange
+    
+    readingSumTotal -= readings[readIndex]; // subtract the last reading from the total
+    readings[readIndex] = tankLevel;        // assigns current level to array
+    readingSumTotal += readings[readIndex]; // add the currentreading to the total
+    
+    readIndex = readIndex + 1;              // advance to the next position in the array:
+    if (readIndex >= numReadings) {         // if at the end of the array, wrap around to the beginning
+      readIndex = 0;
+    }
+    
+    if (readingCount < numReadings){        //accomodates initial lack of data until array is fully populated 
+      readingCount++;
+      readingAverage = readingSumTotal / readingCount;
+                                          
+    } else {
+      readingAverage = readingSumTotal / numReadings;
+    }
+    
+    readingDelta-=readingAverage; //subtracts updated average from previous average
+   
+ //this will work essentially like the dataSmoothing but tracks the trend of the average change over time
+    ROCSumTotal -= readingROC[ROCIndex];  // subtract the last reading from the total
+    readingROC[ROCIndex] = readingDelta;  // assigns current level to array
+    ROCSumTotal += readingROC[ROCIndex];  // add the currentreading to the total
+    ROCIndex = ROCIndex + 1;              // advance to the next position in the array:
+    if (ROCIndex >= numReadings) {        // if at the end of the array, wrap around to the beginning
+      ROCIndex = 0;
+    }   
+   
+   if (readingCount < numReadings){        //accomodates initial lack of data until array is fully populated 
+      ROCTrend = ROCSumTotal / readingCount;
+    } else {
+      ROCTrend = ROCSumTotal / numReadings;
+    }
+     
+}
+
+void reboot() {
+  wdt_disable();
+  wdt_enable(WDTO_15MS);
+  while (1) {}
+}
+
+void millisToHuman(){
+  tsUptime="";
+  
+  tsDays=readingTimestamp/constDays;
+  tsHours = (readingTimestamp%constDays)/constHours;
+  tsMinutes = ((readingTimestamp%constDays)%constHours)/constMinutes;
+  tsSeconds = (((readingTimestamp%constDays)%constHours)%constMinutes)/constSeconds;
+
+  if (tsDays<10){tsUptime+="0";}          //adds leading zero if needed
+  tsUptime +=String(tsDays);
+  tsUptime +=":";
+  
+    if (tsHours<10){tsUptime+="0";}       //adds leading zero if needed
+    tsUptime +=String(tsHours);
+    tsUptime +=":";
+  
+      if (tsMinutes<10){tsUptime+="0";}   //adds leading zero if needed
+      tsUptime +=String(tsMinutes);
+      tsUptime +=":";
+  
+        if (tsSeconds<10){tsUptime+="0";} //adds leading zero if needed
+        tsUptime +=String(tsSeconds);
+  
+}
 void serialMonitorOutput(){   //Displays the information to Serial Monitor
       millisToHuman();
       
@@ -219,73 +290,16 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
         }
         Serial.println();
         
+      Serial.print ("\t Tank level change trend:\t");
+        Serial.print(ROCTrend,1);
+        if (readingCount < numReadings) {
+          Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
+        }
+        
+        Serial.println();
+        
       Serial.println();
 }
-
-void dataSmoothing(){
-    readingDelta=readingAverage;  //used for dataRateOfChange
-    
-    readingSumTotal -= readings[readIndex]; // subtract the last reading from the total
-    readings[readIndex] = tankLevel;        // assigns current level to array
-    readingSumTotal += readings[readIndex]; // add the currentreading to the total
-    
-    readIndex = readIndex + 1;              // advance to the next position in the array:
-    if (readIndex >= numReadings) {         // if at the end of the array, wrap around to the beginning
-      readIndex = 0;
-    }
-    if (readingCount < numReadings){        //accomodates initial lack of data until array is fully populated 
-      readingCount++;
-      readingAverage = readingSumTotal / readingCount;
-                                          
-    } else {
-      readingAverage = readingSumTotal / numReadings;
-    }
-    
-    readingDelta-=readingAverage; //subtracts updated average from previous average
-   
- //this will work essentially like the dataSmoothing but tracks the trend of the average change over time
-    ROCSumTotal -= readingROC[ROCIndex];  // subtract the last reading from the total
-    readingROC[ROCIndex] = readingDelta;  // assigns current level to array
-    ROCSumTotal += readingROC[ROCIndex];  // add the currentreading to the total
-    ROCIndex = ROCIndex + 1;              // advance to the next position in the array:
-    if (ROCIndex >= numReadings) {        // if at the end of the array, wrap around to the beginning
-      ROCIndex = 0;
-    }   
-   ROCTrend = ROCSumTotal / readingCount; //the dataSmoothing routine addresses the increment of readingCOunt
-     
-}
-
-void reboot() {
-  wdt_disable();
-  wdt_enable(WDTO_15MS);
-  while (1) {}
-}
-
-void millisToHuman(){
-  tsUptime="";
-  
-  tsDays=readingTimestamp/constDays;
-  tsHours = (readingTimestamp%constDays)/constHours;
-  tsMinutes = ((readingTimestamp%constDays)%constHours)/constMinutes;
-  tsSeconds = (((readingTimestamp%constDays)%constHours)%constMinutes)/constSeconds;
-
-  if (tsDays<10){tsUptime+="0";}          //adds leading zero if needed
-  tsUptime +=String(tsDays);
-  tsUptime +=":";
-  
-    if (tsHours<10){tsUptime+="0";}       //adds leading zero if needed
-    tsUptime +=String(tsHours);
-    tsUptime +=":";
-  
-      if (tsMinutes<10){tsUptime+="0";}   //adds leading zero if needed
-      tsUptime +=String(tsMinutes);
-      tsUptime +=":";
-  
-        if (tsSeconds<10){tsUptime+="0";} //adds leading zero if needed
-        tsUptime +=String(tsSeconds);
-  
-}
-
 void handleRoot() {
       //this should replicated what is displyed on Serial Monitor
       
