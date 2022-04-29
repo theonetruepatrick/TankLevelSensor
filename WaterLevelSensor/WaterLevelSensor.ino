@@ -429,18 +429,10 @@ void handleRoot() {          //Displays the information to Web Browser
               html +=hrsToEmpty;
               html +=" hrs";
             }
-            
-            html +=ROCTrend;
-            html += "%";
-              if (readingCount < numReadings) {
+            if (readingCount < numReadings) {
                 html += "**";     //visual flag to indicate that current average is not a full set of data yet
               }
           html += "</td></tr>";
-
-
- 
-
-
           
      html +="</table>";
      html +="</body></html>";
