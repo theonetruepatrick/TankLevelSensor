@@ -284,17 +284,15 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
      if (tankLevel<=tankAlarm){
         Serial.println ("  !!!ALERT!!!    Low Tank Level    !!!ALERT!!!");
       }
+      
+     Serial.print ("\t Uptime (D:H:M:S):\t\t");
+       Serial.println (tsUptime);
 
       Serial.print("\t IP Address:\t\t\t");
         Serial.println(SensorIP);
       Serial.print("\t MAC Address:\t\t\t");
       Serial.println(MACAddy);
 
-
-      
-      Serial.print ("\t Uptime (D:H:M:S):\t\t");
-       Serial.println (tsUptime);
-       
       Serial.print ("\t Pulse duration (round trip):\t");
       Serial.print (duration,0);
       Serial.println (" µs");
