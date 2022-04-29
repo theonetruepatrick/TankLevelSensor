@@ -229,13 +229,8 @@ void dataAnalysis(){
 
 
   //this will estimate the number of hours until tank is empty
-
-    if (ROCTrend >= 0){
-      hrsToEmpty=0;
-    } else {
-      hrsToEmpty = (tankLevel/ROCTrend)/60;  //
-    }
-
+      hrsToEmpty = ((tankLevel/ROCTrend)/60)*(-1);  
+    
 
 }
 
@@ -322,8 +317,8 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
         Serial.print(lowSampleFlag);
         Serial.println();
 
-       Serial.print ("\t Approx tank empty:\t");
-        if (hrsToEmpty = 0){
+       Serial.print ("\t Approx time to empty:\t\t");
+        if (hrsToEmpty <= 0){
           Serial.print("n/a");
         } else {
           Serial.print(hrsToEmpty,0);
