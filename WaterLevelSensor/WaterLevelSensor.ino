@@ -180,7 +180,7 @@ void getReading(){
 }
 
 void dataAnalysis(){
-    readingDelta=readingAverage;  //used for dataRateOfChange
+    readingDelta=readingAverage;  //set initial value for calculating the rate of change
     
     readingSumTotal -= readings[readIndex]; // subtract the last reading from the total
     readings[readIndex] = tankLevel;        // assigns current level to array
@@ -199,7 +199,7 @@ void dataAnalysis(){
       readingAverage = readingSumTotal / numReadings;
     }
 
-    if (readingCount > 2){
+    if (readingCount < 2){
       readingDelta=0; //eliminates skewed analysis with first reading
     } else {
       readingDelta-=readingAverage; //subtracts updated average from previous average
@@ -215,7 +215,7 @@ void dataAnalysis(){
       ROCIndex = 0;
     }   
    
-   if (readingCount < numReadings){        //accomodates initial lack of data until array is fully populated 
+   if (readingCount < numReadings){       //accomodates initial lack of data until array is fully populated 
       ROCTrend = ROCSumTotal / readingCount;
     } else {
       ROCTrend = ROCSumTotal / numReadings;
@@ -296,6 +296,7 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
         
       Serial.print ("\t Tank level change trend:\t");
         Serial.print(ROCTrend,1);
+        Serial.print("%");
         if (readingCount < numReadings) {
           Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
         }
