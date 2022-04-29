@@ -29,9 +29,6 @@
     #include <ESP8266WiFi.h>
     #include <ESP8266HTTPClient.h>
     #include <WiFiClient.h>
-    
-    
-    
     const char* ssid     = secret_ssid;
     const char* password = secret_password;
     String MACAddy;  //network MAC address
@@ -62,7 +59,7 @@
     const float speedOfSound = 0.0135;  //speed of sound: inches per MICROsecond
     float durationTimeout = (tankEmpty*1.5*2)/speedOfSound;  //used to shorten wait time for pulse 
   
-  // Define variables for smoothing array:
+  // Define variables for smoothing array
     unsigned long readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
     int readingDelayMS = 60000;  //time gap between readings; default is 60 seconds
     int readingDelayAdjustment;  //me being WAY too anal retentive
@@ -74,6 +71,13 @@
     float readingSumTotal = 0;
     float readingAverage = 0;
 
+  // Define variable for Rate of Change calcuation
+    float readingDelta = 0;
+    int ROCIndex = 0;  // "ROC" = "Rate of Change"
+    float ROCSumTotal = 0;
+    float readingROC[numReadings];  //array that stores deltas of the running averages
+    float ROCTrend = 0;
+    
   //Optional: Display uptime in human friendly format
     const int constSeconds = 1000;  //ms per Second
     const int constMinutes = 60000; //ms per Minute
@@ -162,7 +166,7 @@ void getReading(){
           tankLevel = min(tankLevel, tankLevelMax);   //doesn't allow reading to go above 100
       
       // Call the smoothing formula
-          smoothData();
+          dataAnalysis();
           
       // display output
           serialMonitorOutput();
@@ -173,6 +177,82 @@ void getReading(){
         Serial.println(" : Error: zero value returned, redoing reading....");
      }
       
+}
+
+void dataAnalysis(){
+    readingDelta=readingAverage;  //set initial value for calculating the rate of change
+    
+    readingSumTotal -= readings[readIndex]; // subtract the last reading from the total
+    readings[readIndex] = tankLevel;        // assigns current level to array
+    readingSumTotal += readings[readIndex]; // add the currentreading to the total
+    
+    readIndex = readIndex + 1;              // advance to the next position in the array:
+    if (readIndex >= numReadings) {         // if at the end of the array, wrap around to the beginning
+      readIndex = 0;
+    }
+    
+    if (readingCount < numReadings){        //accomodates initial lack of data until array is fully populated 
+      readingCount++;
+      readingAverage = readingSumTotal / readingCount;
+                                          
+    } else {
+      readingAverage = readingSumTotal / numReadings;
+    }
+
+    if (readingCount < 2){
+      readingDelta=0; //eliminates skewed analysis with first reading
+    } else {
+      readingDelta-=readingAverage; //subtracts updated average from previous average
+    }
+
+    
+ //this will work essentially like the dataAnalysis but tracks the trend of the average change over time
+    ROCSumTotal -= readingROC[ROCIndex];  // subtract the last reading from the total
+    readingROC[ROCIndex] = readingDelta;  // assigns current level to array
+    ROCSumTotal += readingROC[ROCIndex];  // add the currentreading to the total
+    ROCIndex = ROCIndex + 1;              // advance to the next position in the array:
+    if (ROCIndex >= numReadings) {        // if at the end of the array, wrap around to the beginning
+      ROCIndex = 0;
+    }   
+   
+   if (readingCount < numReadings){       //accomodates initial lack of data until array is fully populated 
+      ROCTrend = ROCSumTotal / readingCount;
+    } else {
+      ROCTrend = ROCSumTotal / numReadings;
+    }
+     
+}
+
+
+void reboot() {
+  wdt_disable();
+  wdt_enable(WDTO_15MS);
+  while (1) {}
+}
+
+void millisToHuman(){
+  tsUptime="";
+  
+  tsDays=readingTimestamp/constDays;
+  tsHours = (readingTimestamp%constDays)/constHours;
+  tsMinutes = ((readingTimestamp%constDays)%constHours)/constMinutes;
+  tsSeconds = (((readingTimestamp%constDays)%constHours)%constMinutes)/constSeconds;
+
+  if (tsDays<10){tsUptime+="0";}          //adds leading zero if needed
+  tsUptime +=String(tsDays);
+  tsUptime +=":";
+  
+    if (tsHours<10){tsUptime+="0";}       //adds leading zero if needed
+    tsUptime +=String(tsHours);
+    tsUptime +=":";
+  
+      if (tsMinutes<10){tsUptime+="0";}   //adds leading zero if needed
+      tsUptime +=String(tsMinutes);
+      tsUptime +=":";
+  
+        if (tsSeconds<10){tsUptime+="0";} //adds leading zero if needed
+        tsUptime +=String(tsSeconds);
+  
 }
 
 void serialMonitorOutput(){   //Displays the information to Serial Monitor
@@ -215,62 +295,21 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
         }
         Serial.println();
         
+      Serial.print ("\t Tank level change trend:\t");
+        Serial.print(ROCTrend,1);
+        Serial.print("%");
+        if (readingCount < numReadings) {
+          Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
+        }
+        
+        Serial.println();
+        
       Serial.println();
 }
 
-void smoothData(){
-    readingSumTotal -= readings[readIndex]; // subtract the last reading from the total
-    readings[readIndex] = tankLevel;        // assigns current level to array
-    readingSumTotal += readings[readIndex]; // add the currentreading to the total
-    
-    readIndex = readIndex + 1;              // advance to the next position in the array:
-    if (readIndex >= numReadings) {         // if at the end of the array, wrap around to the beginning
-      readIndex = 0;
-    }
-    if (readingCount < numReadings){        //accomodates initial lack of data until array is fully populated 
-      readingCount++;
-      readingAverage = readingSumTotal / readingCount;
-                                          
-    } else {
-      readingAverage = readingSumTotal / numReadings;
-    }
-}
-
-void reboot() {
-  wdt_disable();
-  wdt_enable(WDTO_15MS);
-  while (1) {}
-}
-
-void millisToHuman(){
-  tsUptime="";
-  
-  tsDays=readingTimestamp/constDays;
-  tsHours = (readingTimestamp%constDays)/constHours;
-  tsMinutes = ((readingTimestamp%constDays)%constHours)/constMinutes;
-  tsSeconds = (((readingTimestamp%constDays)%constHours)%constMinutes)/constSeconds;
-
-  if (tsDays<10){tsUptime+="0";}          //adds leading zero if needed
-  tsUptime +=String(tsDays);
-  tsUptime +=":";
-  
-    if (tsHours<10){tsUptime+="0";}       //adds leading zero if needed
-    tsUptime +=String(tsHours);
-    tsUptime +=":";
-  
-      if (tsMinutes<10){tsUptime+="0";}   //adds leading zero if needed
-      tsUptime +=String(tsMinutes);
-      tsUptime +=":";
-  
-        if (tsSeconds<10){tsUptime+="0";} //adds leading zero if needed
-        tsUptime +=String(tsSeconds);
-  
-}
-
-void handleRoot() {
-      //this should replicated what is displyed on Serial Monitor
-      
-      millisToHuman();
+void handleRoot() {          //Displays the information to Web Browser 
+                             //this should replicated what is displyed on Serial Monitor
+      millisToHuman();  //grabs human readable timestamp
    
    //user interface HTML code----------------
       html = "<!DOCTYPE html><html><head>";
@@ -328,22 +367,34 @@ void handleRoot() {
           html += "</td></tr>";
 
           html += "<tr><td style='text-align:right'>";
-            html += "Current tank reading:";
+            html += "Tank reading - Current:";
           html += "</td><td>";
             html += tankLevel;
             html += "%";
           html += "</td></tr>";
 
           html += "<tr><td style='text-align:right'>";
-            html += "Average of tank reading:";
+            html += "Tank reading 15 Minute Average:";
           html += "</td><td>";
             html +=readingAverage;
             html += "%";
               if (readingCount < numReadings) {
                 html += "**";     //visual flag to indicate that current average is not a full set of data yet
               }
-        html += "</td></tr>";
+          html += "</td></tr>";
 
+
+          html += "<tr><td style='text-align:right'>";
+            html += "Tank reading 15 Minute Trend:";
+          html += "</td><td>";
+            html +=ROCTrend;
+            html += "%";
+              if (readingCount < numReadings) {
+                html += "**";     //visual flag to indicate that current average is not a full set of data yet
+              }
+          html += "</td></tr>";
+
+          
      html +="</table>";
      html +="</body></html>";
      
