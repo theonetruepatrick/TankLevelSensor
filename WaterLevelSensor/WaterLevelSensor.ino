@@ -3,6 +3,8 @@
 // ---------------------------------------------------------------------------
 
 /*
+ * 
+ * 
  * this will measure the distance between the top of the tank
  * and the top of the water.  Readings will be in inches.
  * 
@@ -59,24 +61,30 @@
     const float speedOfSound = 0.0135;  //speed of sound: inches per MICROsecond
     float durationTimeout = (tankEmpty*1.5*2)/speedOfSound;  //used to shorten wait time for pulse 
   
-  // Define variables for smoothing array
-    unsigned long readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
-    int readingDelayMS = 60000;  //time gap between readings; default is 60 seconds
-    int readingDelayAdjustment;  //me being WAY too anal retentive
-    const int numReadings = 15;  //number of readings to be averaged/smoothed
-    int readingCount=0;          //current total number of readings
-    int readings[numReadings];   //array that stores readings
-    int readIndex = 0;           
+  // Define variables for Data Analysis
+    //sampling factors
+      int readingDelayMS = 60000;  //time gap between readings; default is 60 seconds
+      int readingDelayAdjustment;  //me being WAY too anal retentive
+      const int numReadings = 15;  //number of readings to be averaged/smoothed
+      int readingCount=0;          //current total number of readings
+      
+    //Data Smoothing
+      unsigned long readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
+      int readings[numReadings];   //array that stores readings
+      int readIndex = 0;           //index for readings variable
+      float readingSumTotal = 0;
+      float readingAverage = 0;
 
-    float readingSumTotal = 0;
-    float readingAverage = 0;
+    //Rate of Change calcuation
+      float readingDelta = 0;
+      int ROCIndex = 0;           // "ROC" = "Rate of Change"
+      float ROCSumTotal = 0;
+      float readingROC[numReadings];  //array that stores deltas of the running averages
+      float ROCTrend = 0;
 
-  // Define variable for Rate of Change calcuation
-    float readingDelta = 0;
-    int ROCIndex = 0;  // "ROC" = "Rate of Change"
-    float ROCSumTotal = 0;
-    float readingROC[numReadings];  //array that stores deltas of the running averages
-    float ROCTrend = 0;
+    //Time To Empty
+      float hrsToEmpty=0;
+      String lowSampleFlag;
     
   //Optional: Display uptime in human friendly format
     const int constSeconds = 1000;  //ms per Second
@@ -206,7 +214,7 @@ void dataAnalysis(){
     }
 
     
- //this will work essentially like the dataAnalysis but tracks the trend of the average change over time
+  //this will work essentially like the dataAnalysis but tracks the trend of the average change over time
     ROCSumTotal -= readingROC[ROCIndex];  // subtract the last reading from the total
     readingROC[ROCIndex] = readingDelta;  // assigns current level to array
     ROCSumTotal += readingROC[ROCIndex];  // add the currentreading to the total
@@ -220,7 +228,12 @@ void dataAnalysis(){
     } else {
       ROCTrend = ROCSumTotal / numReadings;
     }
-     
+
+
+  //this will estimate the number of hours until tank is empty
+      hrsToEmpty = ((tankLevel/ROCTrend)/60)*(-1);  
+    
+
 }
 
 
@@ -233,7 +246,7 @@ void reboot() {
 void millisToHuman(){
   tsUptime="";
   
-  tsDays=readingTimestamp/constDays;
+  tsDays = readingTimestamp/constDays;
   tsHours = (readingTimestamp%constDays)/constHours;
   tsMinutes = ((readingTimestamp%constDays)%constHours)/constMinutes;
   tsSeconds = (((readingTimestamp%constDays)%constHours)%constMinutes)/constSeconds;
@@ -257,6 +270,13 @@ void millisToHuman(){
 
 void serialMonitorOutput(){   //Displays the information to Serial Monitor
       millisToHuman();
+      if (readingCount < numReadings) {
+          lowSampleFlag = "**";     //visual flag to indicate that current average is not a full set of data yet
+        } else {
+          lowSampleFlag = "";
+        }
+
+
       
       Serial.print ("Sensor Timestamp (ms): ");
        Serial.println (readingTimestamp);
@@ -290,18 +310,26 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
       Serial.print ("\t Tank level - Running Avg:\t");
         Serial.print(readingAverage,1);
         Serial.print("%");
-        if (readingCount < numReadings) {
-          Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
-        }
+        Serial.print(lowSampleFlag);     
         Serial.println();
         
       Serial.print ("\t Tank level change trend:\t");
         Serial.print(ROCTrend,1);
         Serial.print("%");
-        if (readingCount < numReadings) {
-          Serial.print("**");     //visual flag to indicate that current average is not a full set of data yet
+        Serial.print(lowSampleFlag);
+        Serial.println();
+
+       Serial.print ("\t Approx time to empty:\t\t");
+        if (hrsToEmpty <= 0){
+          Serial.print("n/a");
+        } else {
+          Serial.print(hrsToEmpty,0);
+          Serial.print(" hrs");
         }
         
+        Serial.print(lowSampleFlag);
+        Serial.println();
+
         Serial.println();
         
       Serial.println();
