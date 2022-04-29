@@ -420,6 +420,27 @@ void handleRoot() {          //Displays the information to Web Browser
               }
           html += "</td></tr>";
 
+        html += "<tr><td style='text-align:right'>";
+            html += "Approx time to empty:";
+          html += "</td><td>";
+            if (hrsToEmpty <= 0){
+              html += "n/a";  
+            } else {
+              html +=hrsToEmpty;
+              html +=" hrs";
+            }
+            
+            html +=ROCTrend;
+            html += "%";
+              if (readingCount < numReadings) {
+                html += "**";     //visual flag to indicate that current average is not a full set of data yet
+              }
+          html += "</td></tr>";
+
+
+ 
+
+
           
      html +="</table>";
      html +="</body></html>";
