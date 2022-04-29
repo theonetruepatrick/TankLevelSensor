@@ -29,9 +29,6 @@
     #include <ESP8266WiFi.h>
     #include <ESP8266HTTPClient.h>
     #include <WiFiClient.h>
-    
-    
-    
     const char* ssid     = secret_ssid;
     const char* password = secret_password;
     String MACAddy;  //network MAC address
@@ -62,7 +59,7 @@
     const float speedOfSound = 0.0135;  //speed of sound: inches per MICROsecond
     float durationTimeout = (tankEmpty*1.5*2)/speedOfSound;  //used to shorten wait time for pulse 
   
-  // Define variables for smoothing array:
+  // Define variables for smoothing array
     unsigned long readingTimestamp = 0;    //timestamp [milliseconds] variable for reading cycle
     int readingDelayMS = 60000;  //time gap between readings; default is 60 seconds
     int readingDelayAdjustment;  //me being WAY too anal retentive
@@ -73,6 +70,9 @@
 
     float readingSumTotal = 0;
     float readingAverage = 0;
+
+  // Define variable for Rate of Change calcuation
+    float readingDelta = 0;
 
   //Optional: Display uptime in human friendly format
     const int constSeconds = 1000;  //ms per Second
@@ -162,7 +162,7 @@ void getReading(){
           tankLevel = min(tankLevel, tankLevelMax);   //doesn't allow reading to go above 100
       
       // Call the smoothing formula
-          smoothData();
+          dataSmoothing();
           
       // display output
           serialMonitorOutput();
@@ -218,7 +218,9 @@ void serialMonitorOutput(){   //Displays the information to Serial Monitor
       Serial.println();
 }
 
-void smoothData(){
+void dataSmoothing(){
+    readingDelta=readingAverage;  //used for dataRateOfChange
+    
     readingSumTotal -= readings[readIndex]; // subtract the last reading from the total
     readings[readIndex] = tankLevel;        // assigns current level to array
     readingSumTotal += readings[readIndex]; // add the currentreading to the total
@@ -234,6 +236,19 @@ void smoothData(){
     } else {
       readingAverage = readingSumTotal / numReadings;
     }
+    
+    readingDelta-=readingAverage; //subtracts updated average from previous average
+}
+
+
+void dataRateOfChange(){
+    
+    ROCSumTotal -= readingROC[ROCIndex]; // subtract the last reading from the total
+    readingROC[ROCIndex] = readingAverage;        // assigns current level to array
+    ROCSumTotal += readingROC[ROCIndex]; // add the currentreading to the total
+
+    
+  
 }
 
 void reboot() {
