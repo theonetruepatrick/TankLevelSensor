@@ -21,14 +21,19 @@
  * 
  * 
  */
-
- 
+  
+  //this is DIY .h file to store keys, passwords, ssid, & etc.
+    #include <arduino_secrets.h>  //D:\Program Files (x86)\Arduino\libraries\SecretWifi
+    
   // NETWORK CLIENT Config
     #include <ESP8266WiFi.h>
     #include <ESP8266HTTPClient.h>
     #include <WiFiClient.h>
-    const char* ssid     = "serenity";
-    const char* password = "8r0wnc0at5";
+    
+    
+    
+    const char* ssid     = secret_ssid;
+    const char* password = secret_password;
     String MACAddy;  //network MAC address
     String SensorIP; //network IP address (DHCP)
 
