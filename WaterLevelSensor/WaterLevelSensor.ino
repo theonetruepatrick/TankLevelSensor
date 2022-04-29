@@ -43,7 +43,7 @@
 
   // Define Trig and Echo pin:
     #define trigPin 2   // for ESP8266 - physical pin D4 connected to JSN-SR04T "dx trig" pin
-    #define echoPin 15  // for ESP8266 - physical pin D8 connected to JSN-SR04T "dx echo" pin
+    #define echoPin 0  // for ESP8266 - physical pin D3 connected to JSN-SR04T "dx echo" pin
   
   // Define variables for sensor:
     float duration;               //Sensor pulse
