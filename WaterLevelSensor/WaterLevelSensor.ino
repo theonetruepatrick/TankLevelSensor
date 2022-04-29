@@ -359,6 +359,12 @@ void handleRoot() {          //Displays the information to Web Browser
           html += "</td><td>";
             html += readingTimestamp;
           html += "</td></tr>";
+
+          html += "<tr><td style='text-align:right'>";
+            html += "Uptime (D:H:M:S):";
+          html += "</td><td>"; 
+            html += tsUptime;
+          html += "</td></tr>";
      
           html += "<tr><td style='text-align:right'>";
             html += "IP Address:";
@@ -371,13 +377,7 @@ void handleRoot() {          //Displays the information to Web Browser
           html += "</td><td>";
             html += MACAddy;
           html += "</td></tr>";
-   
-          html += "<tr><td style='text-align:right'>";
-            html += "Uptime (D:H:M:S):";
-          html += "</td><td>"; 
-            html += tsUptime;
-          html += "</td></tr>";
-
+         
           html += "<tr><td style='text-align:right'>";
             html += "Pulse duration (round trip):";
           html += "</td><td>";
