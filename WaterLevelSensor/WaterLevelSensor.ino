@@ -73,7 +73,11 @@
 
   // Define variable for Rate of Change calcuation
     float readingDelta = 0;
-
+    int ROCIndex = 0;  // "ROC" = "Rate of Change"
+    float ROCSumTotal = 0;
+    float readingROC[numReadings];  //array that stores deltas of the running averages
+    float ROCTrend = 0;
+    
   //Optional: Display uptime in human friendly format
     const int constSeconds = 1000;  //ms per Second
     const int constMinutes = 60000; //ms per Minute
@@ -238,17 +242,17 @@ void dataSmoothing(){
     }
     
     readingDelta-=readingAverage; //subtracts updated average from previous average
-}
-
-
-void dataRateOfChange(){
-    
-    ROCSumTotal -= readingROC[ROCIndex]; // subtract the last reading from the total
-    readingROC[ROCIndex] = readingAverage;        // assigns current level to array
-    ROCSumTotal += readingROC[ROCIndex]; // add the currentreading to the total
-
-    
-  
+   
+ //this will work essentially like the dataSmoothing but tracks the trend of the average change over time
+    ROCSumTotal -= readingROC[ROCIndex];  // subtract the last reading from the total
+    readingROC[ROCIndex] = readingDelta;  // assigns current level to array
+    ROCSumTotal += readingROC[ROCIndex];  // add the currentreading to the total
+    ROCIndex = ROCIndex + 1;              // advance to the next position in the array:
+    if (ROCIndex >= numReadings) {        // if at the end of the array, wrap around to the beginning
+      ROCIndex = 0;
+    }   
+   ROCTrend = ROCSumTotal / readingCount; //the dataSmoothing routine addresses the increment of readingCOunt
+     
 }
 
 void reboot() {
